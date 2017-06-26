@@ -44,6 +44,6 @@ import { DatabaseConnection } from "./database/connection"
 //     })
 // })
 
-ExchangeType.find().all().commit((et: ExchangeType[]): void => {
-    console.log(et)
+ExchangeType.find().order("tmp").commit((et: ExchangeType[]): void => {
+    // console.log(et)
 })

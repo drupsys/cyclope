@@ -112,15 +112,13 @@ export class BaseNode<M> {
 
 export class Finder<T> {
     protected ref: firebase.database.Reference
-    private obj: Object
 
-    constructor(nodeName: string, obj: Object) {
+    constructor(private nodeName: string, private obj: Object) {
         this.ref = DatabaseConnection.instance().database().ref(nodeName) 
-        this.obj = obj
     }
 
     public all(): All<T> {
-        return new All<T>(this.ref, this.obj)
+        return new All<T>(this.ref, this.obj, this.nodeName)
     }
 
     public byKey(id: string): ByKey<T> {
@@ -180,7 +178,7 @@ abstract class Query<T> {
                 this.obj, new Array(element.val()))
     
             result.index = element.key
-
+            
             records.push(<T>result)
         })
 
@@ -202,8 +200,9 @@ abstract class Query<T> {
 
 class All<T> extends Query<T> {
     
-    constructor(ref: firebase.database.Reference, obj: Object) {
+    constructor(ref: firebase.database.Reference, obj: Object, nodeName: string) {
         super(ref, obj)
+        this.ref = DatabaseConnection.instance().database().ref().child(nodeName)
     }
 
 }
