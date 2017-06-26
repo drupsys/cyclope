@@ -1,0 +1,13 @@
+import { BaseModel, IAttributes } from "../../database/connection";
+
+interface I<MODEL> extends IAttributes {
+    <FIELDS>
+}
+
+export class <MODEL> extends BaseModel<I<MODEL>> {
+    
+    constructor(fields: I<MODEL>) {
+        super(fields, "<TABLE>")
+    }
+
+}
