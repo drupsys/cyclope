@@ -90,7 +90,7 @@ export class BaseNode<M> {
         if (this.relations[id]) {
             callback(<T>relation)
         } else {
-            new Finder<T>(nodeName, obj).byKey(id).commit((node: T): void => {
+            new Finder<T>(nodeName, obj).byKey(id).load((node: T): void => {
                 this.relations[id] = node
                 callback(<T>node)
             })
@@ -114,11 +114,11 @@ export class Finder<T> {
     protected ref: firebase.database.Reference
 
     constructor(private nodeName: string, private obj: Object) {
-        this.ref = DatabaseConnection.instance().database().ref(nodeName) 
+        this.ref = DatabaseConnection.instance().database().ref().child(nodeName) 
     }
 
     public all(): All<T> {
-        return new All<T>(this.ref, this.obj, this.nodeName)
+        return new All<T>(this.ref, this.obj)
     }
 
     public byKey(id: string): ByKey<T> {
@@ -130,91 +130,98 @@ export class Finder<T> {
     }
 }
 
-abstract class Filter<T> {
-    protected ref: firebase.database.Reference
+abstract class Node<T> {
+    protected node: firebase.database.Reference
     protected obj: Object
 
-    constructor(nodeName: firebase.database.Reference, obj: Object) {
-        this.ref = nodeName 
+    constructor(ref: firebase.database.Reference, obj: Object) {
+        this.node = ref
         this.obj = obj
     }
 
-    public commit(callback: ((node: T) => void)): void {
-        this.ref.once("value", (snapshot: firebase.database.DataSnapshot): void => {
+    public load(callback: ((node: T) => void)): void {
+        this.node.once("value", (snapshot: firebase.database.DataSnapshot): void => {
             let result = this.obj.constructor.apply(
-                this.obj, new Array(snapshot.val()))
+                Object.create(this.obj), new Array(snapshot.val()))
         
             result.index = snapshot.key
 
             callback(<T>result)
         })
     }
+
+    public destroy(): void {
+        this.node.remove()
+    }
 }
 
-class ByKey<T> extends Filter<T> {
+class ByKey<T> extends Node<T> {
 
     constructor(ref: firebase.database.Reference, obj: Object, id: string) {
         super(ref, obj)
-        this.ref = this.ref.child(id)
+        this.node = this.node.child(id)
     }
 
 }
 
-abstract class Query<T> {
-    protected ref: firebase.database.Reference | null
-    protected query: firebase.database.Query | null
+abstract class Map<T> {
+    protected node: firebase.database.Reference | null
+    protected map: firebase.database.Query | null
     protected obj: Object
 
-    constructor(nodeName: firebase.database.Reference | firebase.database.Query, obj: Object) {
-        this.ref = <firebase.database.Reference>nodeName
-        this.query = <firebase.database.Query>nodeName
+    constructor(ref: firebase.database.Reference | firebase.database.Query, obj: Object) {
+        this.node = <firebase.database.Reference>ref
+        this.map = <firebase.database.Query>ref
         this.obj = obj
     }
 
     private response(snapshot: any, callback: ((node: T[]) => void)): void {
-        let records: T[] = []
+        let records: T[] = new Array()
         snapshot.forEach((element: firebase.database.DataSnapshot) => {
             let result = this.obj.constructor.apply(
-                this.obj, new Array(element.val()))
+                Object.create(this.obj), new Array(element.val()))
     
             result.index = element.key
-            
+
             records.push(<T>result)
         })
 
         callback(records)
     }
 
-    public commit(callback: ((node: T[]) => void)): void {
-        if (this.query) {
-            this.query.once("value", (snapshot: any): void => {
+    public load(callback: ((node: T[]) => void)): void {
+        if (this.map) {
+            this.map.once("value", (snapshot: any): void => {
                 this.response(snapshot, callback)
             })
-        } else if (this.ref) {
-            this.ref.once("value", (snapshot: any): void => {
+        } else if (this.node) {
+            this.node.once("value", (snapshot: any): void => {
                 this.response(snapshot, callback)
             })
         }
     }
+
+    public destroy_all(): void {
+
+    }
 }
 
-class All<T> extends Query<T> {
+class All<T> extends Map<T> {
     
-    constructor(ref: firebase.database.Reference, obj: Object, nodeName: string) {
+    constructor(ref: firebase.database.Reference, obj: Object) {
         super(ref, obj)
-        this.ref = DatabaseConnection.instance().database().ref().child(nodeName)
     }
 
 }
 
-class Order<T> extends Query<T> {
+class Order<T> extends Map<T> {
 
     constructor(ref: firebase.database.Reference, obj: Object, field: string) {
         super(ref, obj)
-        if (this.ref) {
-            this.query = this.ref.orderByChild(field)
-        } else if (this.query) {
-            this.query = this.query.orderByChild(field)
+        if (this.node) {
+            this.map = this.node.orderByChild(field)
+        } else if (this.map) {
+            this.map = this.map.orderByChild(field)
         }
     }
 }

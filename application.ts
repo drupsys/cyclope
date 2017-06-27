@@ -22,7 +22,7 @@ import { DatabaseConnection } from "./database/connection"
 //   console.log(snapshot.val())
 // });
 
-// Exchange.find().byKey("-KnWewbLs5oTF2bS6XBW").commit((node: Exchange): void => {
+// Exchange.find().byKey("-KnWewbLs5oTF2bS6XBW").load((node: Exchange): void => {
 //     let type = new ExchangeType({
 //         pair: "ETHUSD",
 //         from: "ETH",
@@ -30,10 +30,12 @@ import { DatabaseConnection } from "./database/connection"
 //         fk_exchange: node.id
 //     })
 
-//     type.save()
+//     console.log(node)
+
+//     // type.save()
 // })
 
-// ExchangeType.find().byKey("-KnWewbW2iAsXAJrt41p").commit((et: ExchangeType): void => {
+// ExchangeType.find().byKey("-KnWewbW2iAsXAJrt41p").load((et: ExchangeType): void => {
 //     console.log(et)
 //     et.exchange((e: Exchange): void => {
 //         console.log(e)
@@ -44,6 +46,10 @@ import { DatabaseConnection } from "./database/connection"
 //     })
 // })
 
-ExchangeType.find().order("tmp").commit((et: ExchangeType[]): void => {
-    // console.log(et)
+// ExchangeType.find().all().load((et: ExchangeType[]): void => {
+//     console.log(et)
+// })
+
+ExchangeType.find().order("created_at").load((et: ExchangeType[]): void => {
+    console.log(et)
 })
