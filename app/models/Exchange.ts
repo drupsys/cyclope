@@ -1,4 +1,4 @@
-import { BaseNode, Finder } from "../../database/connection";
+import { Model, Finder, HasMany } from "../../database/connection";
 import { ExchangeType } from "./ExchangeType"
 
 interface IExchange {
@@ -6,15 +6,15 @@ interface IExchange {
 
 }
 
-export class Exchange extends BaseNode<IExchange> {
+export class Exchange extends Model<IExchange> {
     static readonly TAG = "exchanges"
 
     constructor(fields: IExchange) {
         super(fields, Exchange.TAG)
     }
 
-    public exchangeTypes(callback: (data: Exchange[]) => void): void {
-        
+    public exchangeTypes(): HasMany<ExchangeType> {
+        return this.hasMany<ExchangeType>(ExchangeType.TAG, ExchangeType.prototype, Exchange.TAG)
     }
 
     public static find(): Finder<Exchange> {
