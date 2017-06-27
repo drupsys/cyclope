@@ -35,21 +35,22 @@ import { DatabaseConnection } from "./database/connection"
 //     // type.save()
 // })
 
-// ExchangeType.find().byKey("-KnWewbW2iAsXAJrt41p").load((et: ExchangeType): void => {
-//     console.log(et)
-//     et.exchange((e: Exchange): void => {
-//         console.log(e)
-//     })
+ExchangeType.find().byKey("-KnWewbW2iAsXAJrt41p").load((et: ExchangeType): void => {
+    et.exchange((e: Exchange): void => {
+        console.log(e)
+    })
 
-//     et.exchange((e: Exchange): void => {
-//         console.log(e)
-//     })
-// })
+    et.exchange((e: Exchange): void => {
+        console.log(e)
+    })
+})
 
 // ExchangeType.find().all().load((et: ExchangeType[]): void => {
 //     console.log(et)
 // })
 
-ExchangeType.find().order("created_at").load((et: ExchangeType[]): void => {
-    console.log(et)
-})
+// ExchangeType.find().order("created_at").load((et: ExchangeType[]): void => {
+//     console.log(et)
+// })
+
+// ExchangeType.find().byKey("-Kna07hBdAT4aKuuFIH_").destroy()

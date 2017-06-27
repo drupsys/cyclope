@@ -13,6 +13,10 @@ export class Exchange extends BaseNode<IExchange> {
         super(fields, Exchange.TAG)
     }
 
+    public exchangeTypes(callback: (data: Exchange[]) => void): void {
+        
+    }
+
     public static find(): Finder<Exchange> {
         return new Finder<Exchange>(Exchange.TAG, Exchange.prototype)
     }

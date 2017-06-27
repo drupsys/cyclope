@@ -85,16 +85,22 @@ export class BaseNode<M> {
     }
 
     protected belongsTo<T>(nodeName: string, obj: Object, id: string, callback: ((data: T) => void)): void {
-        let relation = this.relations[id]
+        if (!this.relations[nodeName]) this.relations[nodeName] = {}
+
+        let relation = this.relations[nodeName][id]
         
-        if (this.relations[id]) {
+        if (relation) {
             callback(<T>relation)
         } else {
             new Finder<T>(nodeName, obj).byKey(id).load((node: T): void => {
-                this.relations[id] = node
+                this.relations[nodeName][id] = node
                 callback(<T>node)
             })
         }
+    }
+
+    protected hasMany<T>() {
+
     }
 
     public get id(): string {
