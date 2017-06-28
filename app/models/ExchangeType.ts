@@ -1,13 +1,12 @@
 import { Model, Finder, BelongsTo, HasMany, HasOneThrough } from "../../database/connection";
-import { Exchange } from "./Exchange"
-import { Interval } from "./Interval"
-import { CurrentInterval } from "./CurrentInterval"
+import { IExchange, Exchange } from "./Exchange"
+import { IInterval, Interval } from "./Interval"
+import { ICurrentInterval, CurrentInterval } from "./CurrentInterval"
 
-interface IExchangeType {
-    pair: string
+export interface IExchangeType {
 	from: string
 	to: string
-	fk_exchange: string
+	fk_exchanges?: string
     
 }
 
@@ -18,19 +17,19 @@ export class ExchangeType extends Model<IExchangeType> {
         super(fields, ExchangeType.TAG)
     }
 
-    public exchange(): BelongsTo<Exchange> {
-        return this.belongsTo<Exchange>(Exchange.TAG, Exchange.prototype, this.fields.fk_exchange)
+    public exchange(): BelongsTo<IExchange, Exchange> {
+        return this.belongsTo<Exchange>(Exchange.TAG, Exchange.prototype, this.fields.fk_exchanges)
     }
 
-    public intervals(): HasMany<Interval> {
+    public intervals(): HasMany<IInterval, Interval> {
         return this.hasMany<Interval>(Interval.TAG, Interval.prototype, ExchangeType.TAG)
     }
 
-    public currentInterval(): HasOneThrough<Interval> {
+    public currentInterval(): HasOneThrough<IInterval, Interval> {
         return this.hasOneThrough(CurrentInterval.TAG, CurrentInterval.prototype, Interval.prototype)
     }
 
-    public static find(): Finder<ExchangeType> {
-        return new Finder<ExchangeType>(ExchangeType.TAG, ExchangeType.prototype)
+    public static find(): Finder<IExchangeType, ExchangeType> {
+        return new Finder<IExchangeType, ExchangeType>(ExchangeType.TAG, ExchangeType.prototype)
     }
 }

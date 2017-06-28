@@ -1,0 +1,33 @@
+{
+  "name": "cyclope",
+  "version": "1.0.0",
+  "description": "",
+  "main": "application.ts",
+  "scripts": {
+    "test": "tsc && mocha",
+    "watch": "mocha-typescript-watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drupsys/cyclope.git"
+  },
+  "keywords": [
+    "firebase",
+    "model",
+    "manager"
+  ],
+  "author": "Dovydas Rupsys",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/drupsys/cyclope/issues"
+  },
+  "homepage": "https://github.com/drupsys/cyclope#readme",
+  "devDependencies": {
+    "@types/node": "^8.0.5",
+    "mocha": "^3.4.2",
+    "mocha-typescript": "^1.1.5",
+    "source-map-support": "^0.4.15",
+    "typescript": "^2.4.1"
+  },
+  "dependencies": {}
+}

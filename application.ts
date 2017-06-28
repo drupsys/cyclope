@@ -3,76 +3,98 @@ import { ExchangeType } from "./app/models/ExchangeType";
 import { Interval } from "./app/models/Interval";
 import { DatabaseConnection } from "./database/connection"
 
-// let exchange = new Exchange({
-//     name: "poloniex"
-// })
+import { suite, test, slow, timeout } from "mocha-typescript"
 
-// exchange.save()
+// import * as chai from 'chai'
+// import * as sinon from 'sinon'
 
-// let type = new ExchangeType({
-//     pair: "BTCUSD",
-//     from: "BTC",
-//     to: "USD",
-//     fk_exchange: exchange.id
-// })
 
-// type.save()
+function test1() {
+    let exchange = new Exchange({
+        name: "bitfinex"
+    })
 
-// type = new ExchangeType({
-//     pair: "BCUUSD",
-//     from: "BCU",
-//     to: "USD",
-//     fk_exchange: exchange.id
-// })
+    exchange.exchangeTypes().push(new ExchangeType({
+        from: "BTC",
+        to: "USD"
+    }))
+}
 
-// type.save()
+function test2() {
+    let exchange = new Exchange({
+        name: "bitfinex"
+    })
 
-// let dc = DatabaseConnection.instance()
-// dc.database().ref("/exchanges/-KnWewbLs5oTF2bS6XBW").once('value').then(function(snapshot) {
-//   console.log(snapshot.val())
-// });
+    exchange.save()
 
-// Exchange.find().byKey("-KnWewbLs5oTF2bS6XBW").load((node: Exchange): void => {
-//     let type = new ExchangeType({
-//         pair: "BTCUSD",
-//         from: "BTC",
-//         to: "USD",
-//         fk_exchange: node.id
-//     })
+    exchange.exchangeTypes().push(new ExchangeType({
+        from: "BTC",
+        to: "USD"
+    }))
+}
+
+function test3() {
+    Exchange.find().byValue("name", "bitfinex").load((node: Exchange): void => {
+        node.exchangeTypes().push(new ExchangeType({
+            from: "BCU",
+            to: "USD"
+        }))
+
+        node.exchangeTypes().push(new ExchangeType({
+            from: "ETC",
+            to: "USD"
+        }))
+    })
+}
+
+function test4_1() {
+    let exchange = new Exchange({
+        name: "poloniex"
+    })
+
+    exchange.destroy()
+}
+
+function test4_2() {
+    let exchange = new Exchange({
+        name: "poloniex"
+    })
     
-//     // type.save()
+    exchange.save()
 
-//     // type = new ExchangeType({
-//     //     pair: "ETHUSD",
-//     //     from: "ETH",
-//     //     to: "USD",
-//     //     fk_exchange: node.id
-//     // })
+    exchange.exchangeTypes().push(new ExchangeType({
+        from: "BTC",
+        to: "USD"
+    }))
 
-//     // type.save()
+    exchange.exchangeTypes().push(new ExchangeType({
+        from: "ETC",
+        to: "USD"
+    }))
 
-//     // type = new ExchangeType({
-//     //     pair: "BCUUSD",
-//     //     from: "BCU",
-//     //     to: "USD",
-//     //     fk_exchange: node.id
-//     // })
+    exchange.exchangeTypes().destroy_all()
+    exchange.destroy()
+}
 
-//     // type.save()
+function test5() {
+    Exchange.find().byValue("name", "bitfinex").load((node: Exchange): void => {
+        Exchange.find().byKey(node.id).load((e: Exchange): void => {
+            console.log(e)
+        })
 
-//     // console.log(node)
+        node.exchangeTypes().load((et: ExchangeType[]): void => {
+            console.log(et)
 
-//     node.exchangeTypes().load((et: ExchangeType[]): void => {
-//         console.log(et)
-//     })
+            et[0].exchange().load((node: Exchange): void => {
+                console.log(node)
+            })
+        })
+    })
+}
 
-//     // node.exchangeTypes().push(type)
+// test5()
 
-//     // node.exchangeTypes().destroy_all()
-
-// })
-
-ExchangeType.find().byKey("-Kne4rVrWCdsM-Y0c_AD").load((et: ExchangeType): void => {
+// ExchangeType.find().byKey("-Kne4rVrWCdsM-Y0c_AD").load((et: ExchangeType): void => {
     // et.exchange().load((e: Exchange): void => {
     //     console.log(e)
     // })
@@ -89,7 +111,7 @@ ExchangeType.find().byKey("-Kne4rVrWCdsM-Y0c_AD").load((et: ExchangeType): void 
     //     console.log(e)
     // })
 
-})
+// })
 
 // ExchangeType.find().all().load((et: ExchangeType[]): void => {
 //     console.log(et)

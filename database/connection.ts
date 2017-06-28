@@ -99,32 +99,32 @@ export class Model<M> {
         return <ITimestamps>this.attributes
     }
 
-    public belongsTo<T extends Model<any>>(query_node: string, query_type: Object, fk: string | undefined): BelongsTo<T> {
+    protected belongsTo<T extends Model<any>>(query_node: string, query_type: Object, fk: string | undefined): BelongsTo<M, T> {
         if (!this.isPersistent())
-            throw new DatabaseError("Can't call belongs to on a non-persistent model")
+            throw new DatabaseError("Can't call 'belongsTo' on a non-persistent model")
 
         if (!fk)
-            throw new DatabaseError("foreign key cannot be undefined")
+            throw new DatabaseError("Can't call 'belongsTo' with am undefined foreign key")
 
-        return new Finder<T>(query_node, query_type).belongsTo(fk)
+        return new BelongsTo<M, T>(query_node, query_type, fk)
     }
 
-    public hasMany<T extends Model<any>>(query_node: string, query_type: Object, fk_name: string): HasMany<T> {
+    protected hasMany<T extends Model<any>>(query_node: string, query_type: Object, fk_name: string): HasMany<M, T> {
         if (!this.isPersistent())
-            throw new DatabaseError("Can't call has many on a non-persistent model")
+            throw new DatabaseError("Can't call 'hasMany' on a non-persistent model")
 
-        return new Finder<T>(query_node, query_type).hasMany("fk_" + (fk_name).slice(0, fk_name.length - 1), this.id)
+        return new HasMany<M, T>(query_node, query_type, "fk_" + fk_name, this.id)
     }
 
-    public hasOneThrough<T extends Model<any>>(query_node: string, query_type: Object, target_type: Object): HasOneThrough<T> {
+    protected hasOneThrough<T extends Model<any>>(query_node: string, query_type: Object, target_type: Object): HasOneThrough<M, T> {
         if (!this.isPersistent())
-            throw new DatabaseError("Can't call has many on a non-persistent model")
+            throw new DatabaseError("Can't call 'hasOneThrough' on a non-persistent model")
 
         let fks = query_node.split(separator)
-        let fk_name_a = "fk_" + fks[0].slice(0, fks[0].length - 1)
-        let fk_name_b = "fk_" + fks[1].slice(0, fks[1].length - 1)
+        let fk_name_a = "fk_" + fks[0]
+        let fk_name_b = "fk_" + fks[1]
 
-        return new Finder<T>(query_node, query_type).hasOneThrough(query_node, target_type, fk_name_a, fk_name_b, this.id)
+        return new HasOneThrough<M, T>(query_node, query_type, target_type, fk_name_a, fk_name_b, this.id)
     }
 
     public isPersistent(): boolean {
@@ -142,7 +142,7 @@ export class Model<M> {
 
     public destroy(): void {
         if (!this.isPersistent())
-            throw new DatabaseError("Can't destroy non-persistent model")
+            throw new DatabaseError("Can't 'destroy' non-persistent model")
 
         console.log("/" + this.type + "/" + this.id)
 
@@ -162,7 +162,7 @@ export class Model<M> {
     }
 }
 
-export class Finder<T extends Model<any>> {
+export class Finder<M, T extends Model<M>> {
     protected ref: Reference
 
     constructor(protected nodeName: string | null, protected obj: Object) {
@@ -171,37 +171,25 @@ export class Finder<T extends Model<any>> {
         }
     }
 
-    public all(): All<T> {
-        return new All<T>(this.ref, this.obj)
+    public all(): All<M, T> {
+        return new All<M, T>(this.ref, this.obj)
     }
 
-    public order(field: string): Order<T> {
-        return new Order<T>(this.ref, this.obj, field)
-    }
-    
-    public hasMany(fk_name: string, fk: string): HasMany<T> {
-        return new HasMany<T>(this.ref, this.obj, fk_name, fk)
+    public order(field: string): Order<M, T> {
+        return new Order<M, T>(this.ref, this.obj, field)
     }
 
-    public hasOneThrough(middle_name: string, target: Object, fk_name_a: string, fk_name_b: string, fk_a: string): HasOneThrough<T> {
-        return new HasOneThrough<T>(this.ref, this.obj, target, middle_name, fk_name_a, fk_name_b, fk_a)
+    public byKey(id: string): ByKey<M, T> {
+        return new ByKey<M, T>(this.ref, this.obj, id)
     }
 
-    public belongsTo(fk: string): BelongsTo<T> {
-        return new BelongsTo<T>(this.ref, this.obj, fk)
-    }
-
-    public byKey(id: string): ByKey<T> {
-        return new ByKey<T>(this.ref, this.obj, id)
-    }
-
-    public byValue(name: string, value: string): ByField<T> {
-        return new ByField<T>(this.ref, this.obj, name, value)
+    public byValue(name: string, value: string): ByField<M, T> {
+        return new ByField<M, T>(this.ref, this.obj, name, value)
     }
 
 }
 
-abstract class Node<T extends Model<any>> {
+abstract class Node<M, T extends Model<M>> {
     protected ref: Reference | Query
     protected obj: Object
 
@@ -251,7 +239,7 @@ abstract class Node<T extends Model<any>> {
     }
 }
 
-class ByKey<T extends Model<any>> extends Node<T> {
+class ByKey<M, T extends Model<M>> extends Node<M, T> {
 
     constructor(ref: Reference | Query, obj: Object, id: string) {
         super(ref, obj)
@@ -262,7 +250,7 @@ class ByKey<T extends Model<any>> extends Node<T> {
 
 }
 
-class ByField<T extends Model<any>> extends Node<T> {
+class ByField<M, T extends Model<M>> extends Node<M, T> {
 
     constructor(ref: Reference | Query, obj: Object, name: string, value: string) {
         super(ref, obj)
@@ -272,10 +260,10 @@ class ByField<T extends Model<any>> extends Node<T> {
 
 }
 
-export class BelongsTo<T extends Model<any>> extends Node<T> {
+export class BelongsTo<M, T extends Model<M>> extends Node<M, T> {
 
-    constructor(ref: Reference | Query, obj: Object, private fk: string) {
-        super(ref, obj)
+    constructor(target_name: string, obj: Object, private fk: string) {
+        super(DatabaseConnection.instance().database().ref().child(target_name), obj)
 
         if (isReference(this.ref))
             this.ref = this.ref.child(fk)
@@ -283,7 +271,46 @@ export class BelongsTo<T extends Model<any>> extends Node<T> {
 
 }
 
-abstract class Collection<T extends Model<any>> {
+export class HasOneThrough<M, T extends Model<M>> extends Node<M, T> {
+    
+    constructor(private middle_name: string, middle: Object, private target: Object, private fk_name_a: string, private fk_name_b: string, private fk_a: string) {
+        super(DatabaseConnection.instance().database().ref().child(middle_name), middle)
+
+        this.ref = this.ref.orderByChild(this.fk_name_a).equalTo(fk_a)
+    }
+
+    public load(callback: ((node: T) => void)): void {
+        super.load((middle: T): void => {   
+            let target_name = this.middle_name.split(separator)[1]
+            let target_key = (<any>middle.fields)[this.fk_name_b]
+
+            new Finder<M, T>(target_name, this.target).
+                byKey(target_key).
+                load(callback)
+        })
+    }
+
+    public set(target: T): void {
+        super.load((old_middle: T): void => {
+            
+            old_middle.destroy()
+            target.save()
+
+            let attributes: any = {}
+            attributes[this.fk_name_a] = this.fk_a
+            attributes[this.fk_name_b] = target.id
+
+            let new_middle = new Model<any>(attributes, this.middle_name)
+            new_middle.save()
+        })
+
+        // new Finder<T>(this.middle_name, this.obj).
+        //     byValue(this.fk_name_a, this.fk_a).
+        //     load()
+    }
+}
+
+abstract class Collection<M, T extends Model<M>> {
     protected ref: Reference | Query
     protected obj: Object
 
@@ -317,7 +344,7 @@ abstract class Collection<T extends Model<any>> {
     }
 }
 
-class All<T extends Model<any>> extends Collection<T> {
+class All<M, T extends Model<M>> extends Collection<M, T> {
     
     constructor(ref: firebase.database.Reference, obj: Object) {
         super(ref, obj)
@@ -325,7 +352,7 @@ class All<T extends Model<any>> extends Collection<T> {
 
 }
 
-class Order<T extends Model<any>> extends Collection<T> {
+class Order<M, T extends Model<M>> extends Collection<M, T> {
 
     constructor(ref: firebase.database.Reference, obj: Object, field: string) {
         super(ref, obj)
@@ -335,60 +362,21 @@ class Order<T extends Model<any>> extends Collection<T> {
 
 }
 
-export class HasMany<T extends Model<any>> extends Collection<T> {
+export class HasMany<M, T extends Model<M>> extends Collection<M, T> {
     
-    constructor(ref: firebase.database.Reference, obj: Object, private fk_name: string, private fk: string) {
-        super(ref, obj)
+    constructor(target_name: string, obj: Object, private fk_name: string, private fk: string) {
+        super(DatabaseConnection.instance().database().ref().child(target_name), obj)
  
         this.ref = this.ref.orderByChild(fk_name).equalTo(fk)
     }
 
-    public push(node: Model<any>): void {
-        node.fields[this.fk_name] = this.fk
+    public push(node: T): void {
+        (<any>node.fields)[this.fk_name] = this.fk
         node.save()
     }
 
 }
 
-export class HasOneThrough<T extends Model<any>> extends Node<T> {
-    
-    constructor(ref: firebase.database.Reference, middle: Object, private target: Object, private middle_name: string, private fk_name_a: string, private fk_name_b: string, private fk_a: string) {
-        super(ref, middle)
-
-        this.ref = this.ref.orderByChild(this.fk_name_a).equalTo(fk_a)
-    }
-
-    public load(callback: ((node: T) => void)): void {
-        super.load((middle: T): void => {   
-            let target_name = this.middle_name.split(separator)[1]
-            let target_key = middle.fields[this.fk_name_b]
-
-            new Finder<T>(target_name, this.target).
-                byKey(target_key).
-                load(callback)
-        })
-    }
-
-    public set(target: T): void {
-        super.load((old_middle: T): void => {
-            
-            old_middle.destroy()
-            target.save()
-
-            let attributes: any = {}
-            attributes[this.fk_name_a] = this.fk_a
-            attributes[this.fk_name_b] = target.id
-
-            let new_middle = new Model<any>(attributes, this.middle_name)
-            new_middle.save()
-        })
-
-        // new Finder<T>(this.middle_name, this.obj).
-        //     byValue(this.fk_name_a, this.fk_a).
-        //     load()
-    }
-}
-
-export class HasManyThrough<T extends Model<any>> extends Collection<T> {
+export class HasManyThrough<M, T extends Model<M>> extends Collection<M, T> {
 
 }
