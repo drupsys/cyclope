@@ -85,9 +85,9 @@ ExchangeType.find().byKey("-Kne4rVrWCdsM-Y0c_AD").load((et: ExchangeType): void 
     //     volume: 0
     // }))
 
-    et.currentInterval().loadThrough((e: Interval): void => {
-        console.log(e)
-    })
+    // et.currentInterval().load((e: Interval): void => {
+    //     console.log(e)
+    // })
 
 })
 

@@ -15,12 +15,12 @@ export class CurrentInterval extends Model<ICurrentInterval> {
         super(fields, CurrentInterval.TAG)
     }
 
-    public exchangeType(): BelongsTo<ExchangeType> {
-        return this.belongsTo<ExchangeType>(ExchangeType.TAG, ExchangeType.prototype, this.fields.fk_exchange_type)
-    }
+    // public exchangeType(): BelongsTo<ExchangeType> {
+    //     return this.belongsTo<ExchangeType>(ExchangeType.TAG, ExchangeType.prototype, this.fields.fk_exchange_type)
+    // }
 
-    public interval(): BelongsTo<Interval> {
-        return this.belongsTo<Interval>(Interval.TAG, Interval.prototype, this.fields.fk_interval)
-    }
+    // public interval(): BelongsTo<Interval> {
+    //     return this.belongsTo<Interval>(Interval.TAG, Interval.prototype, this.fields.fk_interval)
+    // }
 
 }

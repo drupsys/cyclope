@@ -3,6 +3,18 @@ import * as hash from 'object-hash'
 
 let separator = "|"
 
+type Reference = firebase.database.Reference
+type Query = firebase.database.Query
+type Snapshot = firebase.database.DataSnapshot
+
+function isReference(object: Reference | Query): object is Reference {
+    if (typeof (<any>object).child == 'function') {
+        return true
+    } else {
+        return false
+    }
+}
+
 interface IModel {
     index: string
     type: string
@@ -151,7 +163,7 @@ export class Model<M> {
 }
 
 export class Finder<T extends Model<any>> {
-    protected ref: firebase.database.Reference
+    protected ref: Reference
 
     constructor(protected nodeName: string | null, protected obj: Object) {
         if (nodeName) {
@@ -183,14 +195,23 @@ export class Finder<T extends Model<any>> {
         return new ByKey<T>(this.ref, this.obj, id)
     }
 
+    public byValue(name: string, value: string): ByField<T> {
+        return new ByField<T>(this.ref, this.obj, name, value)
+    }
+
 }
 
 abstract class Node<T extends Model<any>> {
+    protected ref: Reference | Query
+    protected obj: Object
 
-    constructor(protected ref: firebase.database.Reference, protected obj: Object) { }
+    constructor(ref: Reference | Query, obj: Object) {
+        this.ref = ref
+        this.obj = obj
+    }
 
-    public load(callback: ((node: T) => void)): void {
-        this.ref.once("value", (snapshot: firebase.database.DataSnapshot): void => {
+    private responseNode(callback: ((node: T) => void)) {
+        this.ref.once("value", (snapshot: Snapshot): void => {
             let result = this.obj.constructor.apply(
                 Object.create(this.obj), new Array(snapshot.val()))
         
@@ -198,6 +219,29 @@ abstract class Node<T extends Model<any>> {
 
             callback(<T>result)
         })
+    }
+
+    private responseCollection(callback: ((node: T) => void)) {
+        this.ref.once("value", (snapshot: any): void => {
+            let records: T[] = new Array()
+            snapshot.forEach((element: Snapshot) => {
+                let result = this.obj.constructor.apply(
+                    Object.create(this.obj), new Array(element.val()))
+        
+                result.index = element.key
+                records.push(<T>result)
+            })
+
+            callback(<T>records[0])
+        })
+    }
+
+    public load(callback: ((node: T) => void)): void {
+        if (isReference(this.ref)) {
+            this.responseNode(callback)
+        } else {
+            this.responseCollection(callback)
+        }
     }
 
     public destroy(): void {
@@ -209,57 +253,59 @@ abstract class Node<T extends Model<any>> {
 
 class ByKey<T extends Model<any>> extends Node<T> {
 
-    constructor(ref: firebase.database.Reference, obj: Object, id: string) {
+    constructor(ref: Reference | Query, obj: Object, id: string) {
         super(ref, obj)
-        this.ref = this.ref.child(id)
+
+        if (isReference(this.ref))
+            this.ref = this.ref.child(id)
+    }
+
+}
+
+class ByField<T extends Model<any>> extends Node<T> {
+
+    constructor(ref: Reference | Query, obj: Object, name: string, value: string) {
+        super(ref, obj)
+
+        this.ref = this.ref.orderByChild(name).equalTo(value).limitToLast(1)
     }
 
 }
 
 export class BelongsTo<T extends Model<any>> extends Node<T> {
 
-    constructor(ref: firebase.database.Reference, obj: Object, private fk: string) {
+    constructor(ref: Reference | Query, obj: Object, private fk: string) {
         super(ref, obj)
-        this.ref = this.ref.child(fk)
+
+        if (isReference(this.ref))
+            this.ref = this.ref.child(fk)
     }
 
 }
 
 abstract class Collection<T extends Model<any>> {
-    protected ref: firebase.database.Reference | null
-    protected map: firebase.database.Query | null
+    protected ref: Reference | Query
     protected obj: Object
 
-    constructor(ref: firebase.database.Reference | firebase.database.Query, obj: Object) {
-        this.ref = <firebase.database.Reference>ref
-        this.map = <firebase.database.Query>ref
+    constructor(ref: Reference | Query, obj: Object) {
+        this.ref = ref
         this.obj = obj
     }
 
-    private response(snapshot: any, callback: ((node: T[]) => void)): void {
-        let records: T[] = new Array()
-        snapshot.forEach((element: firebase.database.DataSnapshot) => {
-            let result = this.obj.constructor.apply(
-                Object.create(this.obj), new Array(element.val()))
-    
-            result.index = element.key
-
-            records.push(<T>result)
-        })
-
-        callback(records)
-    }
-
     public load(callback: ((node: T[]) => void)): void {
-        if (this.map) {
-            this.map.once("value", (snapshot: any): void => {
-                this.response(snapshot, callback)
+        this.ref.once("value", (snapshot: any): void => {
+            let records: T[] = new Array()
+            snapshot.forEach((element: Snapshot) => {
+                let result = this.obj.constructor.apply(
+                    Object.create(this.obj), new Array(element.val()))
+        
+                result.index = element.key
+
+                records.push(<T>result)
             })
-        } else if (this.ref) {
-            this.ref.once("value", (snapshot: any): void => {
-                this.response(snapshot, callback)
-            })
-        }
+
+            callback(records)
+        })
     }
 
     public destroy_all(): void {
@@ -283,11 +329,8 @@ class Order<T extends Model<any>> extends Collection<T> {
 
     constructor(ref: firebase.database.Reference, obj: Object, field: string) {
         super(ref, obj)
-        if (this.ref) {
-            this.map = this.ref.orderByChild(field)
-        } else if (this.map) {
-            this.map = this.map.orderByChild(field)
-        }
+
+        this.ref = this.ref.orderByChild(field)
     }
 
 }
@@ -297,54 +340,52 @@ export class HasMany<T extends Model<any>> extends Collection<T> {
     constructor(ref: firebase.database.Reference, obj: Object, private fk_name: string, private fk: string) {
         super(ref, obj)
  
-        if (this.ref) {
-            this.map = this.ref.orderByChild(fk_name).equalTo(fk)
-        } else if (this.map) {
-            this.map = this.map.orderByChild(fk_name).equalTo(fk)
-        }
+        this.ref = this.ref.orderByChild(fk_name).equalTo(fk)
     }
 
     public push(node: Model<any>): void {
         node.fields[this.fk_name] = this.fk
         node.save()
     }
+
 }
 
-export class HasOneThrough<T extends Model<any>> extends Collection<T> {
+export class HasOneThrough<T extends Model<any>> extends Node<T> {
     
-    constructor(ref: firebase.database.Reference, middle: Object, target: Object, private middle_name: string, private fk_name_a: string, private fk_name_b: string, private fk_a: string) {
+    constructor(ref: firebase.database.Reference, middle: Object, private target: Object, private middle_name: string, private fk_name_a: string, private fk_name_b: string, private fk_a: string) {
         super(ref, middle)
 
-        if (this.ref) {
-            this.map = this.ref.orderByChild(this.fk_name_a).equalTo(fk_a)
-        } else if (this.map) {
-            this.map = this.map.orderByChild(this.fk_name_a).equalTo(fk_a)
-        }
+        this.ref = this.ref.orderByChild(this.fk_name_a).equalTo(fk_a)
     }
 
-    public loadThrough(callback: ((node: T) => void)): void {
-        new Finder<T>(this.middle_name, this.obj).hasMany(this.fk_name_a, this.fk_a).load((node: T[]): void => {
-            let middle = <any>node[0]
-            let f = this.fk_name_b.slice(3);
-            middle[f]().load(callback)
+    public load(callback: ((node: T) => void)): void {
+        super.load((middle: T): void => {   
+            let target_name = this.middle_name.split(separator)[1]
+            let target_key = middle.fields[this.fk_name_b]
+
+            new Finder<T>(target_name, this.target).
+                byKey(target_key).
+                load(callback)
         })
     }
 
-    public set(node: T): void {
-        new Finder<T>(this.middle_name, this.obj).hasMany(this.fk_name_a, this.fk_a).load((nodes: T[]): void => {
-            nodes.forEach(element => {
-                element.destroy()
-            })
-
-            node.save()
+    public set(target: T): void {
+        super.load((old_middle: T): void => {
+            
+            old_middle.destroy()
+            target.save()
 
             let attributes: any = {}
             attributes[this.fk_name_a] = this.fk_a
-            attributes[this.fk_name_b] = node.id
+            attributes[this.fk_name_b] = target.id
 
-            let middle = new Model<any>(attributes, this.middle_name)
-            middle.save()
+            let new_middle = new Model<any>(attributes, this.middle_name)
+            new_middle.save()
         })
+
+        // new Finder<T>(this.middle_name, this.obj).
+        //     byValue(this.fk_name_a, this.fk_a).
+        //     load()
     }
 }
 
