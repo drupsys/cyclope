@@ -6,7 +6,6 @@ import { suite, test, slow, timeout } from "mocha-typescript"
 // import * as chai from 'chai'
 // import * as sinon from 'sinon'
 
-
 function test1() {
     let exchange = new Exchange({
         name: "bitfinex"
