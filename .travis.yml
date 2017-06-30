@@ -9,4 +9,9 @@ cache:
 install:
   - npm install
 
+branches:
+  only:
+  - master
+  - develop
+
 script: npm test
