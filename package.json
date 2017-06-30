@@ -1,0 +1,46 @@
+{
+  "name": "cyclope",
+  "version": "0.0.1",
+  "description": "ORM based API for the Google's Firebase service.",
+  "main": "bin/application.js",
+  "scripts": {
+    "test": "tsc && mocha",
+    "watch": "mocha-typescript-watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drupsys/cyclope.git"
+  },
+  "keywords": [
+    "orm",
+    "google",
+    "firebase",
+    "model",
+    "manager"
+  ],
+  "author": "Dovydas Rupsys",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/drupsys/cyclope/issues"
+  },
+  "homepage": "https://github.com/drupsys/cyclope#readme",
+  "devDependencies": {
+    "@types/chai": "^4.0.1",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^8.0.5",
+    "@types/sinon": "^2.3.2",
+    "assert": "^1.4.1",
+    "chai": "^4.0.2",
+    "firebase-admin": "^5.0.0",
+    "mocha": "^3.4.2",
+    "mocha-typescript": "^1.1.5",
+    "object-hash": "^1.1.8",
+    "sinon": "^2.3.6",
+    "source-map-support": "^0.4.15",
+    "typescript": "^2.4.1"
+  },
+  "dependencies": {},
+  "bin": {
+    "cyclope": "application.js"
+  }
+}
