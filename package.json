@@ -1,7 +1,7 @@
 {
   "name": "cyclope",
-  "version": "1.0.0",
-  "description": "None",
+  "version": "0.0.1",
+  "description": "ORM based API for the Google's Firebase service.",
   "main": "bin/application.js",
   "scripts": {
     "test": "tsc && mocha",
@@ -12,6 +12,8 @@
     "url": "git+https://github.com/drupsys/cyclope.git"
   },
   "keywords": [
+    "orm",
+    "google",
     "firebase",
     "model",
     "manager"
