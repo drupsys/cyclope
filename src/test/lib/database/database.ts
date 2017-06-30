@@ -7,7 +7,7 @@ import * as db from '../../../lib/database'
 
 import { NodeA } from "./models"
 
-let bin = "../../../bin/"
+let bin = "../../../"
 let app = "[DEFAULT]"
 
 @suite("Database")
