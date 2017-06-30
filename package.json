@@ -5,7 +5,6 @@
   "main": "bin/application.js",
   "scripts": {
     "test": "tsc && mocha",
-    "dev-test-watch": "mocha-typescript-watch",
     "watch": "mocha-typescript-watch"
   },
   "repository": {

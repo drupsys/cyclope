@@ -29,7 +29,6 @@ class Database {
     }
 
     @test "should reset reference if setup() is called" () {
-        // db.DatabaseConnection.setup(app, bin + "test_key", "https://test-platform-9f2d0.firebaseio.com/")
         let dbold = db.DatabaseConnection.instance()
         db.DatabaseConnection.setup("second", bin + "test_key", "https://test-platform-9f2d0.firebaseio.com/")
         let dbnew = db.DatabaseConnection.instance()
