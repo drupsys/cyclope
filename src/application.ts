@@ -1,93 +1,93 @@
-import { Exchange, ExchangeType, Interval } from "./app/models";
-import { DatabaseConnection } from "./lib/database"
+// import { Exchange, ExchangeType, Interval } from "./app/models";
+// import { DatabaseConnection } from "./lib/database"
 
-import { suite, test, slow, timeout } from "mocha-typescript"
+// import { suite, test, slow, timeout } from "mocha-typescript"
 
-// import * as chai from 'chai'
-// import * as sinon from 'sinon'
+// // import * as chai from 'chai'
+// // import * as sinon from 'sinon'
 
-function test1() {
-    let exchange = new Exchange({
-        name: "bitfinex"
-    })
+// function test1() {
+//     let exchange = new Exchange({
+//         name: "bitfinex"
+//     })
 
-    exchange.exchangeTypes().push(new ExchangeType({
-        from: "BTC",
-        to: "USD"
-    }))
-}
+//     exchange.exchangeTypes().push(new ExchangeType({
+//         from: "BTC",
+//         to: "USD"
+//     }))
+// }
 
-function test2() {
-    let exchange = new Exchange({
-        name: "bitfinex"
-    })
+// function test2() {
+//     let exchange = new Exchange({
+//         name: "bitfinex"
+//     })
 
-    exchange.save()
+//     exchange.save()
 
-    exchange.exchangeTypes().push(new ExchangeType({
-        from: "BTC",
-        to: "USD"
-    }))
-}
+//     exchange.exchangeTypes().push(new ExchangeType({
+//         from: "BTC",
+//         to: "USD"
+//     }))
+// }
 
-function test3() {
-    Exchange.find().byValue("name", "bitfinex").load((node: Exchange): void => {
-        node.exchangeTypes().push(new ExchangeType({
-            from: "BCU",
-            to: "USD"
-        }))
+// function test3() {
+//     Exchange.find().byValue("name", "bitfinex").load((node: Exchange): void => {
+//         node.exchangeTypes().push(new ExchangeType({
+//             from: "BCU",
+//             to: "USD"
+//         }))
 
-        node.exchangeTypes().push(new ExchangeType({
-            from: "ETC",
-            to: "USD"
-        }))
-    })
-}
+//         node.exchangeTypes().push(new ExchangeType({
+//             from: "ETC",
+//             to: "USD"
+//         }))
+//     })
+// }
 
-function test4_1() {
-    let exchange = new Exchange({
-        name: "poloniex"
-    })
+// function test4_1() {
+//     let exchange = new Exchange({
+//         name: "poloniex"
+//     })
 
-    exchange.destroy()
-}
+//     exchange.destroy()
+// }
 
-function test4_2() {
-    let exchange = new Exchange({
-        name: "poloniex"
-    })
+// function test4_2() {
+//     let exchange = new Exchange({
+//         name: "poloniex"
+//     })
     
-    exchange.save()
+//     exchange.save()
 
-    exchange.exchangeTypes().push(new ExchangeType({
-        from: "BTC",
-        to: "USD"
-    }))
+//     exchange.exchangeTypes().push(new ExchangeType({
+//         from: "BTC",
+//         to: "USD"
+//     }))
 
-    exchange.exchangeTypes().push(new ExchangeType({
-        from: "ETC",
-        to: "USD"
-    }))
+//     exchange.exchangeTypes().push(new ExchangeType({
+//         from: "ETC",
+//         to: "USD"
+//     }))
 
-    exchange.exchangeTypes().destroy_all()
-    exchange.destroy()
-}
+//     exchange.exchangeTypes().destroy_all()
+//     exchange.destroy()
+// }
 
-function test5() {
-    Exchange.find().byValue("name", "bitfinex").load((node: Exchange): void => {
-        Exchange.find().byKey(node.id).load((e: Exchange): void => {
-            console.log(e)
-        })
+// function test5() {
+//     Exchange.find().byValue("name", "bitfinex").load((node: Exchange): void => {
+//         Exchange.find().byKey(node.id).load((e: Exchange): void => {
+//             console.log(e)
+//         })
 
-        node.exchangeTypes().load((et: ExchangeType[]): void => {
-            console.log(et)
+//         node.exchangeTypes().load((et: ExchangeType[]): void => {
+//             console.log(et)
 
-            et[0].exchange().load((node: Exchange): void => {
-                console.log(node)
-            })
-        })
-    })
-}
+//             et[0].exchange().load((node: Exchange): void => {
+//                 console.log(node)
+//             })
+//         })
+//     })
+// }
 
 // test5()
 

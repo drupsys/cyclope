@@ -72,22 +72,20 @@ export class Model<M> {
         return this.index
     }
 
-    public destroy(): void {
+    public destroy(completed?: (e: Error|null) => void): void {
         if (!this.isPersistent())
             throw new DatabaseError("Can't 'destroy' non-persistent model")
 
-        console.log("/" + this.type + "/" + this.id)
-
-        DatabaseConnection.instance().database().ref(this.type).child(this.id).remove()
+        DatabaseConnection.instance().database().ref(this.type).child(this.id).remove(completed)
     }
 
-    public save(): void {
+    public save(completed?: ((e: Error|null) => any)): void {
         if (!this.isPersistent() || this.isChanged()) {
             this.index = DatabaseConnection.instance().updateTable({
                 index: this.index,
                 fields: this.attributes,
                 type: this.type
-            })
+            }, completed)
         }
 
         this.hash = this.last_hash

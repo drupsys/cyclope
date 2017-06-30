@@ -21,6 +21,14 @@ export class Finder<M, T extends Model<M>> {
         }
     }
 
+    public first(): nodes.First<M, T> {
+        return new nodes.First<M, T>(this.ref, this.obj)
+    }
+
+    public last(): nodes.Last<M, T> {
+        return new nodes.Last<M, T>(this.ref, this.obj)
+    }
+
     public all(): collections.All<M, T> {
         return new collections.All<M, T>(this.ref, this.obj)
     }

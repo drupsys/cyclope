@@ -13,29 +13,49 @@ export interface IModel {
 export class DatabaseError extends Error {}
 
 export class DatabaseConnection {
-    private static ref: DatabaseConnection
+    private static ref: DatabaseConnection = null
+    private static app_name: string = "default"
+    private static service_key: string = ""
+    private static firebase_url: string = ""
 
     private db: firebase.database.Database
-    private authentication = require("serviceAccountKey.json")
 
     private constructor(){
         firebase.initializeApp({
-            credential:  firebase.credential.cert(this.authentication),
-            databaseURL: "https://cryptohaven-299ff.firebaseio.com"
-        })
+            credential:  firebase.credential.cert(require(DatabaseConnection.service_key)),
+            databaseURL: DatabaseConnection.firebase_url
+        }, DatabaseConnection.app_name)
 
         this.db = firebase.database()
     }
 
-    public static instance(): DatabaseConnection {
-        if (this.ref == null) {
-            this.ref = new DatabaseConnection();
-        }
-
-        return this.ref;
+    public static setup(app: string, service_key: string, firebase_url: string): void {
+        DatabaseConnection.app_name = app
+        
+        if (service_key != "")
+            DatabaseConnection.service_key = service_key + ".json"
+        else
+            DatabaseConnection.service_key = ""
+    
+        DatabaseConnection.firebase_url = firebase_url
+        DatabaseConnection.ref = null;
     }
 
-    public updateTable(model: IModel): string {
+    public static instance(): DatabaseConnection {
+        if (DatabaseConnection.service_key == "")
+            throw new DatabaseError("Sevice key is not set, call DatabaseConnection.setup(service_key, firebase_url)")
+
+        if (DatabaseConnection.firebase_url == "")
+            throw new DatabaseError("Database url is not set, call DatabaseConnection.setup(service_key, firebase_url)")
+
+        if (DatabaseConnection.ref == null) {
+            DatabaseConnection.ref = new DatabaseConnection();
+        }
+
+        return DatabaseConnection.ref;
+    }
+
+    public updateTable(model: IModel, completed?: ((e: Error|null) => any)): string {
         let t: { [key: string]: { [key: string]: any } } = {};
         let persistent = model.index != ""
         let timestamp = + new Date()
@@ -49,11 +69,11 @@ export class DatabaseConnection {
             }
             
             model.fields["created_at"] = timestamp
-        }   
+        }
 
         model.fields["updated_at"] = timestamp
         t["/" + model.type + "/" + model.index] = model.fields
-        this.db.ref().update(t)
+        this.db.ref().update(t, completed)
 
         return model.index
     }
